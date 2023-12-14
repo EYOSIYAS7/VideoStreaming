@@ -3,12 +3,17 @@ const mongodb = require("mongodb");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const app = express();
+require("dotenv").config();
 const conn = mongoose.createConnection(process.env.mongo_url);
+
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
+});
 //  to upload a video
 app.get("/uploadV", (req, res) => {
   if (conn) {
     const bucket = new mongodb.GridFSBucket(conn);
-    const videoUploadStream = bucket.openUploadStream("bigbuck");
+    const videoUploadStream = bucket.openUploadStream("bitcoin_mining");
     const videoReadStream = fs.createReadStream("./video1.mp4");
     videoReadStream.pipe(videoUploadStream);
     res.status(200).send("Done");
@@ -43,11 +48,12 @@ app.get("/downloadV", (req, res) => {
     res.writeHead(206, headers);
 
     const bucket = new mongodb.GridFSBucket(conn);
-    const downloadStream = bucket.openDownloadStreamByName("bigbuck", {
+    const downloadStream = bucket.openDownloadStreamByName("bitcoin_mining", {
       start,
+      end,
     });
 
-    downloadStream.pie(res);
+    downloadStream.pipe(res);
   });
 });
 app.listen(5050, () => {
